@@ -3,17 +3,19 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: blog-postgres
+    container_name: blog-database
     environment:
-      POSTGRES_DB: blog
-      POSTGRES_USER: postgres_dev
-      POSTGRES_PASSWORD: ${DB_PASSWROD:-password}
+      POSTGRES_DB: blog-database
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - blog-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres_dev"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres_blog}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,19 +25,20 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: blog-app
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+    ports:
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/blog
-      SPRING_DATASOURCE_USERNAME: postgres_dev
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWROD:-password}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_PROFILES_ACTIVE: prod
-    ports:
-      - "8585:8585"
+    networks:
+      - blog-network
     restart: unless-stopped
 
 volumes:
   postgres_data:
 
+networks:
+  blog-network:
+    driver: bridge
