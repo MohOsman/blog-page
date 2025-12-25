@@ -6,8 +6,8 @@ services:
     container_name: blog-database
     environment:
       POSTGRES_DB: blog-database
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME:-postgres_blog} #local
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mypassword} # local
     ports:
       - "5432:5432"
     volumes:
@@ -28,7 +28,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: local
     ports:
-      - "8080:8080"
+      - "8585:8585"
     depends_on:
       postgres:
         condition: service_healthy
